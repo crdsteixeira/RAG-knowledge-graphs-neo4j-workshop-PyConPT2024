@@ -3,6 +3,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain_community.graphs import Neo4jGraph
+from langchain_community.vectorstores.neo4j_vector import Neo4jVector
+from langchain_openai import OpenAIEmbeddings
+
 
 COURSES_PATH = "1-knowledge-graphs-vectors/data/asciidoc"
 
@@ -10,11 +15,28 @@ COURSES_PATH = "1-knowledge-graphs-vectors/data/asciidoc"
 loader = DirectoryLoader(COURSES_PATH, glob="**/lesson.adoc", loader_cls=TextLoader)
 docs = loader.load()
 
-# Create a text splitter
-# text_splitter =
+text_splitter = CharacterTextSplitter(
+    separator="\n\n",
+    chunk_size=1500,
+    chunk_overlap=200,
+)
 
-# Split documents into chunks
-# chunks =
+chunks = text_splitter.split_documents(docs)
 
-# Create a Neo4j vector store
-# neo4j_db =
+print(chunks)
+
+graph = Neo4jGraph(
+    url=os.getenv('NEO4J_URI'),
+    username=os.getenv('NEO4J_USERNAME'),
+    password=os.getenv('NEO4J_PASSWORD'),
+)
+
+neo4j_vector = Neo4jVector.from_documents(
+    chunks,
+    OpenAIEmbeddings(openai_api_key=os.getenv('OPENAI_API_KEY')),
+    graph=graph,
+    index_name="chunkVector",
+    node_label="Chunk", 
+    text_node_property="text", 
+    embedding_node_property="embedding",  
+)

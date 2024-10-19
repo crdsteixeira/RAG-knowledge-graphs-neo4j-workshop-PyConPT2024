@@ -7,7 +7,7 @@ from openai import OpenAI
 llm = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 response = llm.embeddings.create(
-        input="Text to create embeddings for",
+        input="A mysterious spaceship lands Earth",
         model="text-embedding-ada-002"
     )
 
